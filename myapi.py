@@ -1,4 +1,4 @@
-from fastapi import FastAPI,Path
+from fastapi import FastAPI,Path,HTTPException
 from typing import Optional
 from pydantic import BaseModel
 app = FastAPI()
@@ -39,21 +39,26 @@ def get_selected(id: int = Path(..., description="Enter the student ID", gt=0, l
 
 @app.get("/get-by-name/{s_id}")
 def get_student(s_id: int, name: Optional[str] = None):
+    
     if name and s_id:
         if s_id in students and students[s_id]['name'] == name:
             return students[s_id]
-        return {"Error": "id and name does not match"}
-    
+        
+        raise HTTPException(status_code=404, detail="ID and Name do not match")
+
+   
     if name:
         for student_id in students:
             if students[student_id]['name'] == name:
                 return students[student_id]
-        return {"Error": "No data found."}
+        raise HTTPException(status_code=404, detail="No student found with that name")
+
     
     if s_id in students:
         return students[s_id]
-        
-    return {"Error": "No data found."}
+    
+   
+    raise HTTPException(status_code=404, detail="Student not found. Please provide a valid Name or ID.")
 
 
 @app.post("/create-student/{student_id}")

@@ -87,3 +87,5 @@ def delete_student(student_id:int):
         return {"Error": "Id does not exist."}
     del students[student_id]
     return {"Success":f"{student_id}'s id is deleted. "}
+
+# Till Now we have created 10 students in our dictionary. We can create more students by using the POST method and providing a unique student_id and the student details in the request body.

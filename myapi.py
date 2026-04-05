@@ -1,8 +1,11 @@
 from fastapi import FastAPI,Path,HTTPException,Depends
 from typing import Optional
 from pydantic import BaseModel
+import models
+from database import engin , get_db
 app = FastAPI()
 
+models.Base.metadata.create_all(bind=engin)
 
 students = {
     1: {"name": "Samrat", "age": 18, "year": 12, "email": "samrat@example.com"},

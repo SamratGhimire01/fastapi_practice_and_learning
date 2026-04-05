@@ -1,4 +1,4 @@
-from fastapi import FastAPI,Path,HTTPException
+from fastapi import FastAPI,Path,HTTPException,Depends
 from typing import Optional
 from pydantic import BaseModel
 app = FastAPI()
@@ -28,6 +28,16 @@ class Update_student(BaseModel):
     age : Optional[int] = None
     year : Optional[int] = None
     email:Optional[str] =None
+    
+    
+def verify_id_exists(student_id: int):
+    if student_id not in students:
+        raise HTTPException(detail={"Error": "Id does not exist."},status_code=404)
+    return True
+def dupli_id(student_id: int):
+    if student_id in students:
+        raise HTTPException(detail={"Error": f"Student Id already exists. Choose after id number {len(students)}."},status_code=404)
+    return True
  
 @app.get("/")
 def get_all():
@@ -63,16 +73,13 @@ def get_student(s_id: int, name: Optional[str] = None):
 
 @app.post("/create-student/{student_id}")
 def create_student(student_id : int , student:Student):
-    if student_id in students:
-        return {"Error": f"Student Id already exists. Choose after id number {len(students)}."}
+    if student_id != (max(students.keys()) + 1):
+        raise HTTPException(detail={"Error":f"Out of order! Please use ID {max(students.keys()) + 1}."},status_code=400)
     students[student_id] = student
     return {'Success': f"{student.name}'s record is recorded succefully."}
 
 @app.put("/update-student/{student_id}")
-def update_student(student_id: int, student: Update_student):
-    if student_id not in students:
-        return {"Error": "Id does not exist."}
-    
+def update_student(student_id: int, student: Update_student,check: bool=Depends(verify_id_exists)):
     # Convert Pydantic object to a dict, removing anything that is None
     update_data = student.model_dump(exclude_unset=True)
     
@@ -82,9 +89,7 @@ def update_student(student_id: int, student: Update_student):
     return {"Success": f"{students[student_id]['name']}'s record is updated successfully."}
 
 @app.delete("/delete_student/{student_id}")
-def delete_student(student_id:int):
-    if student_id not in students:
-        return {"Error": "Id does not exist."}
+def delete_student(student_id:int,check: bool=Depends(verify_id_exists)):
     del students[student_id]
     return {"Success":f"{student_id}'s id is deleted. "}
 
